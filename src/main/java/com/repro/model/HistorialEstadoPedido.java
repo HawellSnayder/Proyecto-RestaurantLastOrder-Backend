@@ -1,9 +1,11 @@
 package com.repro.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
+@Data
 @Entity
 @Table(name = "historial_estado_pedido")
 public class HistorialEstadoPedido {

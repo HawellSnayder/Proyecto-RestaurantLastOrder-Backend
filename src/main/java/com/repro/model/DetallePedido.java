@@ -1,9 +1,11 @@
 package com.repro.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.math.BigDecimal;
 
+@Data
 @Entity
 @Table(name = "detalle_pedido")
 public class DetallePedido {

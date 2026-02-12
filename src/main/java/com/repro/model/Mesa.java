@@ -2,7 +2,9 @@ package com.repro.model;
 
 import com.repro.model.Enum.EstadoMesa;
 import jakarta.persistence.*;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "mesas")
 public class Mesa {

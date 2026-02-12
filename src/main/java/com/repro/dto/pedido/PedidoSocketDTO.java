@@ -1,7 +1,9 @@
 package com.repro.dto.pedido;
 
-import java.math.BigDecimal;
+import lombok.Data;
 
+import java.math.BigDecimal;
+@Data
 public class PedidoSocketDTO {
 
     private Long id;

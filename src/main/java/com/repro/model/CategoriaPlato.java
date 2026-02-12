@@ -1,7 +1,9 @@
 package com.repro.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "categorias_plato")
 public class CategoriaPlato {
