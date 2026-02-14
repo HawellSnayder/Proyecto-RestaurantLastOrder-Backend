@@ -16,5 +16,6 @@ public interface CategoriaService {
     List<CategoriaResponseDTO> listarTodas();
 
     void desactivar(Long id);
+    void cambiarEstado(Long id, Boolean activo);
 }
 

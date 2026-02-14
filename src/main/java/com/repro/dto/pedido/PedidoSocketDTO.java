@@ -1,5 +1,6 @@
 package com.repro.dto.pedido;
 
+import com.repro.model.Enum.EventoPedido;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -10,5 +11,6 @@ public class PedidoSocketDTO {
     private Integer mesaNumero;
     private String estado;
     private BigDecimal total;
+    private EventoPedido evento;
 }
 

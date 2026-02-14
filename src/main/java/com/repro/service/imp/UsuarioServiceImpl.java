@@ -32,6 +32,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado"));
 
         Usuario usuario = new Usuario();
+        usuario.setNombre(dto.getNombre());
         usuario.setUsername(dto.getUsername());
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         usuario.setRol(rol);

@@ -13,7 +13,6 @@ public interface PedidoService {
 
     PedidoResponseDTO cambiarEstado(Long pedidoId, String nuevoEstado);
 
-    void cerrarPedido(Long pedidoId);
 
     List<PedidoResponseDTO> listarPorEstado(String estado);
 

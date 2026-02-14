@@ -10,5 +10,12 @@ public interface MesaService {
 
     List<Mesa> listarLibres();
 
-    public void reservar(Long id);
+    void reservar(Long id);
+
+    void liberar(Long id);
+
+    void ocupar(Long id);
+
+    List<Mesa> listarTodas();
+
 }

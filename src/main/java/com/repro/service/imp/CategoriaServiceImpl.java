@@ -2,10 +2,13 @@ package com.repro.service.imp;
 
 import com.repro.dto.categoria.CategoriaRequestDTO;
 import com.repro.dto.categoria.CategoriaResponseDTO;
+import com.repro.dto.categoria.CategoriaSocketDTO;
 import com.repro.model.CategoriaPlato;
+import com.repro.model.Enum.EventoCategoria;
 import com.repro.repository.CategoriaPlatoRepository;
 import com.repro.service.CategoriaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,8 @@ import java.util.List;
 public class CategoriaServiceImpl implements CategoriaService {
 
     private final CategoriaPlatoRepository repository;
+    private final SimpMessagingTemplate messagingTemplate;
+
 
     @Override
     @Transactional
@@ -67,6 +72,33 @@ public class CategoriaServiceImpl implements CategoriaService {
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
 
         categoria.setActivo(false);
+
+        enviarEventoCategoria(categoria, EventoCategoria.DESACTIVADA);
+
+        // También notificar platos de esa categoría
+        messagingTemplate.convertAndSend("/topic/categorias/desactivada", categoria.getId());
+    }
+    @Transactional
+    public void cambiarEstado(Long id, Boolean activo) {
+
+        CategoriaPlato categoria = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
+
+        categoria.setActivo(activo);
+
+        enviarEventoCategoria(categoria,
+                activo ? EventoCategoria.ACTIVADA : EventoCategoria.DESACTIVADA);
+    }
+
+    private void enviarEventoCategoria(CategoriaPlato categoria, EventoCategoria evento) {
+
+        CategoriaSocketDTO dto = new CategoriaSocketDTO();
+        dto.setId(categoria.getId());
+        dto.setNombre(categoria.getNombre());
+        dto.setActivo(categoria.getActivo());
+        dto.setEvento(evento);
+
+        messagingTemplate.convertAndSend("/topic/categorias", dto);
     }
 }
 

@@ -15,6 +15,7 @@ public interface PlatoService {
     PlatoResponseDTO actualizar(Long id, PlatoRequestDTO dto);
 
     void desactivar(Long id);
+    void cambiarDisponibilidad(Long id, Boolean disponible);
 }
 
 

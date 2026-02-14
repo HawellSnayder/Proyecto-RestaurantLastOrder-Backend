@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface PlatoRepository extends JpaRepository<Plato, Long> {
-    List<Plato> findByActivoTrue();
+    List<Plato> findByDisponibleTrue();
 }
 
