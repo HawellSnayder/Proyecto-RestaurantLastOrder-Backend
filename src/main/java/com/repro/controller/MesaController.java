@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/mesas")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:4200")
 public class MesaController {
 
     private final MesaService mesaService;

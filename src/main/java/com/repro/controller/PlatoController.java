@@ -12,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/platos")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
 public class PlatoController {
 
     private final PlatoService platoService;

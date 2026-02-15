@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,28 +29,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                // .cors(cors -> cors.configurationSource(corsConfigurationSource())) <-- BORRA ESTA LÍNEA QUE DA ERROR
+                .cors(Customizer.withDefaults()) // <-- USA ESTA. Spring buscará tu Bean en CorsConfig.java
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Acceso público
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // Solo el ADMIN gestiona usuarios y platos (el menú)
-                        .requestMatchers("/api/usuarios/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/categorias/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/platos/**").hasAuthority("ADMIN")
-
-                        // MESERO y ADMIN gestionan mesas
-                        .requestMatchers("/api/mesas/**").hasAnyAuthority("ADMIN", "MESERO")
-
-                        // PEDIDOS: Los tres roles tienen acceso (Mesero crea, Cajero cobra, Admin supervisa)
-                        .requestMatchers("/api/pedidos/**").hasAnyAuthority("ADMIN", "MESERO", "CAJERO")
-
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authenticationProvider(authenticationProvider()).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);;
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
