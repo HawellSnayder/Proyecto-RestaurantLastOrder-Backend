@@ -7,6 +7,7 @@ import com.repro.repository.RolRepository;
 import com.repro.repository.UsuarioRepository;
 import com.repro.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +24,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
@@ -49,11 +51,18 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     @Transactional
     public void desactivar(Long id) {
-
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
         usuario.setActivo(false);
+        usuarioRepository.save(usuario);
+
+        // Notificación para actualizar la lista de los demás
+        messagingTemplate.convertAndSend("/topic/usuarios-desactivados", id);
+
+        // CAMBIO AQUÍ: Enviamos a un tópico específico del usuario
+        messagingTemplate.convertAndSend("/topic/logout/" + usuario.getUsername(),
+                "Tu cuenta ha sido desactivada por un administrador");
     }
 
     @Override
