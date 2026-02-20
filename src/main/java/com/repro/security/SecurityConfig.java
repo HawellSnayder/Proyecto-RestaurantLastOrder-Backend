@@ -28,9 +28,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // .cors(cors -> cors.configurationSource(corsConfigurationSource())) <-- BORRA ESTA LÍNEA QUE DA ERROR
-                .cors(Customizer.withDefaults()) // <-- USA ESTA. Spring buscará tu Bean en CorsConfig.java
+        http.cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()

@@ -52,6 +52,7 @@ public class AuthController {
         LoginResponseDTO response = new LoginResponseDTO();
         response.setToken(token);
         response.setUsername(usuario.getUsername());
+        response.setNombre(usuario.getNombre());
         response.setRol(usuario.getRol().getNombre());
 
         return ResponseEntity.ok(response);
