@@ -17,5 +17,6 @@ public interface CategoriaService {
 
     void desactivar(Long id);
     void cambiarEstado(Long id, Boolean activo);
+    void eliminar(Long id);
 }
 

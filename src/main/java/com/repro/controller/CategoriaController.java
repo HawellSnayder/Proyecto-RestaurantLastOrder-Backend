@@ -54,5 +54,11 @@ public class CategoriaController {
         categoriaService.cambiarEstado(id, activo);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        categoriaService.eliminar(id); // Debes crear este método en el Service
+        return ResponseEntity.noContent().build();
+    }
 }
 
