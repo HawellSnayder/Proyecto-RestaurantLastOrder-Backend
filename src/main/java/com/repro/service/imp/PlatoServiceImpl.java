@@ -13,8 +13,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -33,6 +36,13 @@ public class PlatoServiceImpl implements PlatoService {
                 .stream()
                 .map(PlatoResponseDTO::from)
                 .toList();
+    }
+    @Override
+    public List<PlatoResponseDTO> listarTodos() {
+        return repository.findAll()
+                .stream()
+                .map(PlatoResponseDTO::from) // Usamos el método que ya definiste
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -103,6 +113,45 @@ public class PlatoServiceImpl implements PlatoService {
         plato.setDisponible(disponible);
 
         enviarEvento(plato, EventoPlato.DISPONIBILIDAD_CAMBIADA);
+    }
+    @Override
+    @Transactional
+    public PlatoResponseDTO crearConImagen(PlatoRequestDTO dto, MultipartFile archivo) {
+        // 1. Validar categoría
+        CategoriaPlato categoria = categoriaPlatoRepository.findById(dto.getCategoriaId())
+                .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
+
+        // 2. Crear entidad
+        Plato plato = new Plato();
+        plato.setNombre(dto.getNombre());
+        plato.setPrecio(dto.getPrecio());
+        plato.setCategoria(categoria);
+        plato.setDisponible(true);
+
+        // 3. Convertir imagen a bytes para la BD (BLOB)
+        if (archivo != null && !archivo.isEmpty()) {
+            try {
+                plato.setImagen(archivo.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException("Error al leer el archivo de imagen");
+            }
+        }
+
+        Plato guardado = repository.save(plato);
+        enviarEvento(guardado, EventoPlato.CREADO);
+
+        return PlatoResponseDTO.from(guardado);
+    }
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        Plato plato = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Plato no encontrado"));
+
+        repository.delete(plato);
+
+        // Notificamos a los WebSockets que un plato fue ELIMINADO
+        enviarEvento(plato, EventoPlato.ELIMINADO);
     }
 
 

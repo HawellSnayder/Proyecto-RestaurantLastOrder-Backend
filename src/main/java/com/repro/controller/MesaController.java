@@ -26,7 +26,7 @@ public class MesaController {
             @RequestBody MesaRequestDTO dto
     ) {
 
-        Mesa mesa = mesaService.crear(dto.getNumero(), dto.getCapacidad());
+        Mesa mesa = mesaService.crear(dto);
         return ResponseEntity.ok(convertToResponse(mesa));
     }
 
@@ -83,6 +83,19 @@ public class MesaController {
     public ResponseEntity<Void> liberar(@PathVariable Long id) {
         mesaService.liberar(id);
         return ResponseEntity.noContent().build();
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        mesaService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<MesaResponseDTO> actualizar(
+            @PathVariable Long id,
+            @RequestBody MesaRequestDTO dto
+    ) {
+        Mesa mesa = mesaService.actualizar(id, dto);
+        return ResponseEntity.ok(convertToResponse(mesa));
     }
 
 

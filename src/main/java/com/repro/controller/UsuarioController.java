@@ -48,4 +48,20 @@ public class UsuarioController {
         Usuario usuario = usuarioService.obtenerActual();
         return ResponseEntity.ok(UsuarioResponseDTO.from(usuario));
     }
+    @PatchMapping("/{id}/activar")
+    public ResponseEntity<Void> activar(@PathVariable Long id) {
+        usuarioService.activar(id); // Debes crear este método en el Service
+        return ResponseEntity.ok().build();
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        usuarioService.eliminar(id); // Implementar en el Service
+        return ResponseEntity.noContent().build();
+    }
+
+    // Opcional: Para el Admin, necesitas ver TODOS, no solo activos
+    @GetMapping
+    public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(usuarioService.listarTodos());
+    }
 }

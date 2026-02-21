@@ -1,5 +1,6 @@
 package com.repro.service.imp;
 
+import com.repro.dto.mesa.MesaRequestDTO;
 import com.repro.dto.mesa.MesaSocketDTO;
 import com.repro.model.Enum.EstadoMesa;
 import com.repro.model.Enum.EventoMesa;
@@ -25,15 +26,16 @@ public class MesaServiceImpl implements MesaService {
 
     @Override
     @Transactional
-    public Mesa crear(Integer numero, Integer capacidad) {
+    public Mesa crear(MesaRequestDTO dto) { // <--- Cambiamos parámetros por el DTO
 
-        if (mesaRepository.existsByNumero(numero)) {
-            throw new IllegalArgumentException("La mesa ya existe");
+        // Ahora usamos dto.getNumero()
+        if (mesaRepository.existsByNumero(dto.getNumero())) {
+            throw new IllegalArgumentException("La mesa número " + dto.getNumero() + " ya existe");
         }
 
         Mesa mesa = new Mesa();
-        mesa.setNumero(numero);
-        mesa.setCapacidad(capacidad);
+        mesa.setNumero(dto.getNumero());
+        mesa.setCapacidad(dto.getCapacidad());
         mesa.setEstado(EstadoMesa.LIBRE);
 
         Mesa guardada = mesaRepository.save(mesa);
@@ -96,6 +98,45 @@ public class MesaServiceImpl implements MesaService {
     @Override
     public List<Mesa> listarTodas() {
         return mesaRepository.findAll();
+    }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        Mesa mesa = mesaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Mesa no encontrada"));
+
+        if (mesa.getEstado() != EstadoMesa.LIBRE) {
+            throw new RuntimeException("No se puede eliminar una mesa que está " + mesa.getEstado());
+        }
+
+        // Guardamos los datos antes de borrar para el último evento
+        mesaRepository.delete(mesa);
+
+        // UNIFICADO: Enviamos el evento con el tipo ELIMINADA
+        enviarEvento(mesa, EventoMesa.ELIMINADA);
+    }
+
+    @Override
+    @Transactional
+    public Mesa actualizar(Long id, MesaRequestDTO dto) {
+        Mesa mesa = mesaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("La mesa con ID " + id + " no existe"));
+
+        if (!mesa.getNumero().equals(dto.getNumero())) {
+            if (mesaRepository.existsByNumero(dto.getNumero())) {
+                throw new RuntimeException("Ya existe otra mesa con el número: " + dto.getNumero());
+            }
+            mesa.setNumero(dto.getNumero());
+        }
+
+        mesa.setCapacidad(dto.getCapacidad());
+        Mesa mesaActualizada = mesaRepository.save(mesa);
+
+        // UNIFICADO: Usamos tu método enviarEvento
+        enviarEvento(mesaActualizada, EventoMesa.ACTUALIZADA);
+
+        return mesaActualizada;
     }
 
     // =========================

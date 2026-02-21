@@ -23,24 +23,25 @@ public class AuthController {
     private final UsuarioRepository usuarioRepository;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(
-            @RequestBody LoginRequestDTO request
-    ) {
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO request) {
 
         // 1️⃣ Autenticar credenciales
         try {
-            Authentication authentication = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
-            System.out.println("¡Autenticación exitosa!");
         } catch (Exception e) {
-            System.out.println("Error de autenticación: " + e.getMessage());
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).body("Credenciales incorrectas");
         }
 
         // 2️⃣ Obtener usuario desde BD
         Usuario usuario = usuarioRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 🔥 2.1 VERIFICAR SI ESTÁ ACTIVO
+        if (!usuario.getActivo()) {
+            return ResponseEntity.status(403).body("Tu cuenta ha sido desactivada. Contacta al administrador.");
+        }
 
         // 3️⃣ Generar token
         String token = jwtService.generateToken(

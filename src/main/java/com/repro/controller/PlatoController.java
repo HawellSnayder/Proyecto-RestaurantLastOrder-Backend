@@ -6,7 +6,10 @@ import com.repro.service.PlatoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -17,16 +20,29 @@ public class PlatoController {
 
     private final PlatoService platoService;
 
-
+    @GetMapping
+    public ResponseEntity<List<PlatoResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(platoService.listarTodos()); // Crea este método en el Service
+    }
     @GetMapping("/disponibles")
     public ResponseEntity<List<PlatoResponseDTO>> listarDisponibles() {
         return ResponseEntity.ok(platoService.listarDisponibles());
     }
 
 
-    @PostMapping
-    public ResponseEntity<PlatoResponseDTO> crear(@RequestBody PlatoRequestDTO dto) {
-        return ResponseEntity.ok(platoService.crear(dto));
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<PlatoResponseDTO> crear(
+            @RequestParam("nombre") String nombre,
+            @RequestParam("precio") BigDecimal precio,
+            @RequestParam("categoriaId") Long categoriaId,
+            @RequestParam("imagen") MultipartFile imagen // <--- Aquí llega el archivo
+    ) throws IOException {
+        PlatoRequestDTO dto = new PlatoRequestDTO();
+        dto.setNombre(nombre);
+        dto.setPrecio(precio);
+        dto.setCategoriaId(categoriaId);
+
+        return ResponseEntity.ok(platoService.crearConImagen(dto, imagen));
     }
 
     @PutMapping("/{id}")
@@ -45,6 +61,11 @@ public class PlatoController {
     ) {
         platoService.cambiarDisponibilidad(id, disponible);
         return ResponseEntity.ok().build();
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        platoService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }
 

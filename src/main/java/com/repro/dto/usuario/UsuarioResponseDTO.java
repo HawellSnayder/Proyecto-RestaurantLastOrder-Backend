@@ -10,6 +10,7 @@ public class UsuarioResponseDTO {
     private String nombre;
     private String username;
     private String rol;
+    private boolean activo; // <--- 1. Agregamos el campo
 
     public static UsuarioResponseDTO from(Usuario usuario) {
         UsuarioResponseDTO dto = new UsuarioResponseDTO();
@@ -17,7 +18,7 @@ public class UsuarioResponseDTO {
         dto.setNombre(usuario.getNombre());
         dto.setUsername(usuario.getUsername());
         dto.setRol(usuario.getRol().getNombre());
+        dto.setActivo(usuario.getActivo());
         return dto;
     }
 }
-
