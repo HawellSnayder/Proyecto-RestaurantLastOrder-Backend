@@ -2,11 +2,15 @@ package com.repro.model;
 
 import com.repro.model.Enum.EstadoMesa;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @Data
 @Entity
 @Table(name = "mesas")
+@RequiredArgsConstructor
+@AllArgsConstructor
 public class Mesa {
 
     @Id

@@ -17,6 +17,7 @@ public interface PedidoService {
     List<PedidoResponseDTO> listarPorEstado(String estado);
 
     PedidoResponseDTO obtenerPorId(Long id);
+    List<PedidoResponseDTO> listarTodos();
 }
 
 

@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -67,24 +68,46 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public PedidoResponseDTO editarPedido(Long pedidoId, PedidoRequestDTO dto) {
-
         Pedido pedido = obtenerPedido(pedidoId);
         validarPedidoEditable(pedido);
 
-        pedido.getDetalles().clear();
+        // 1. Identificar IDs que vienen del Front
+        List<Long> idsNuevos = dto.getDetalles().stream()
+                .map(DetallePedidoRequestDTO::getPlatoId)
+                .toList();
 
-        BigDecimal total = BigDecimal.ZERO;
+        // 2. Eliminar los que ya no están (Orphan Removal hará el resto)
+        pedido.getDetalles().removeIf(det -> !idsNuevos.contains(det.getPlato().getId()));
 
-        for (DetallePedidoRequestDTO det : dto.getDetalles()) {
-            total = total.add(agregarDetalle(pedido, det));
+        BigDecimal totalAcumulado = BigDecimal.ZERO;
+
+        // 3. Procesar
+        for (DetallePedidoRequestDTO detDto : dto.getDetalles()) {
+            // Buscar si ya existe en la lista actual del pedido
+            DetallePedido detalle = pedido.getDetalles().stream()
+                    .filter(d -> d.getPlato().getId().equals(detDto.getPlatoId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (detalle != null) {
+                // Actualizar existente
+                detalle.setCantidad(detDto.getCantidad());
+                BigDecimal subtotal = detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detDto.getCantidad()));
+                detalle.setSubtotal(subtotal);
+                totalAcumulado = totalAcumulado.add(subtotal);
+            } else {
+                // Es nuevo: agregarDetalle ya lo añade a pedido.getDetalles() y calcula subtotal
+                totalAcumulado = totalAcumulado.add(agregarDetalle(pedido, detDto));
+            }
         }
 
+        pedido.setTotal(totalAcumulado);
         pedido.setObservaciones(dto.getObservaciones());
-        pedido.setTotal(total);
 
-        enviarEventoSocket(pedido, EventoPedido.EDITADO);
+        Pedido guardado = pedidoRepository.save(pedido);
+        enviarEventoSocket(guardado, EventoPedido.EDITADO);
 
-        return PedidoResponseDTO.from(pedido);
+        return PedidoResponseDTO.from(guardado);
     }
 
     // =========================
@@ -120,16 +143,14 @@ public class PedidoServiceImpl implements PedidoService {
 
         // PAGAR
         if (nuevoEstado.equalsIgnoreCase("PAGADO")) {
-
+            // 1. Asignamos el estado PAGADO que ya obtuviste arriba
             pedido.setEstado(estado);
+
+            // 2. Liberamos la mesa
             pedido.getMesa().setEstado(EstadoMesa.LIBRE);
 
-            EstadoPedido finalizado =
-                    estadoPedidoService.obtenerPorNombre("FINALIZADO");
-
-            pedido.setEstado(finalizado);
-
-            enviarEventoSocket(pedido, EventoPedido.FINALIZADO);
+            // 3. Enviamos el evento por socket (Cambié el evento a ESTADO_CAMBIADO o puedes usar uno de pago)
+            enviarEventoSocket(pedido, EventoPedido.ESTADO_CAMBIADO);
 
             return PedidoResponseDTO.from(pedido);
         }
@@ -159,6 +180,14 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional(readOnly = true)
     public PedidoResponseDTO obtenerPorId(Long id) {
         return PedidoResponseDTO.from(obtenerPedido(id));
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> listarTodos() {
+        return pedidoRepository.findAll() // O tu lógica para obtener todos
+                .stream()
+                .map(PedidoResponseDTO::from)
+                .collect(Collectors.toList());
     }
 
     // =========================
@@ -219,6 +248,9 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     private BigDecimal agregarDetalle(Pedido pedido, DetallePedidoRequestDTO det) {
+        if (det.getPlatoId() == null) {
+            throw new IllegalArgumentException("Error: El detalle del pedido contiene un ID de plato nulo");
+        }
 
         Plato plato = platoRepository.findById(det.getPlatoId())
                 .orElseThrow(() -> new IllegalArgumentException("Plato no existe"));
@@ -249,4 +281,5 @@ public class PedidoServiceImpl implements PedidoService {
 
         messagingTemplate.convertAndSend("/topic/pedidos", dto);
     }
+
 }

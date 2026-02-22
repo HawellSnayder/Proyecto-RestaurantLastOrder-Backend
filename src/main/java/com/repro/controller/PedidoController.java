@@ -12,7 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/pedidos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "http://localhost:4200",methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE})
 public class PedidoController {
 
     private final PedidoService pedidoService;
@@ -30,7 +30,7 @@ public class PedidoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<PedidoResponseDTO> editar(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody PedidoRequestDTO dto
     ) {
         return ResponseEntity.ok(
@@ -48,15 +48,6 @@ public class PedidoController {
         );
     }
 
-    @GetMapping
-    public ResponseEntity<List<PedidoResponseDTO>> listarPorEstado(
-            @RequestParam String estado
-    ) {
-        return ResponseEntity.ok(
-                pedidoService.listarPorEstado(estado)
-        );
-    }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<PedidoResponseDTO> obtenerPorId(
@@ -65,6 +56,16 @@ public class PedidoController {
         return ResponseEntity.ok(
                 pedidoService.obtenerPorId(id)
         );
+    }
+    @GetMapping
+    public ResponseEntity<List<PedidoResponseDTO>> listar(
+            @RequestParam(required = false) String estado // Lo hacemos opcional
+    ) {
+        if (estado != null && !estado.isEmpty()) {
+            return ResponseEntity.ok(pedidoService.listarPorEstado(estado));
+        }
+        // Necesitas tener este método en tu PedidoService para traer TODOS
+        return ResponseEntity.ok(pedidoService.listarTodos());
     }
 }
 

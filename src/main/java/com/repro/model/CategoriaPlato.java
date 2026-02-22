@@ -1,11 +1,15 @@
 package com.repro.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @Data
 @Entity
 @Table(name = "categorias_plato")
+@RequiredArgsConstructor
+@AllArgsConstructor
 public class CategoriaPlato {
 
     @Id
