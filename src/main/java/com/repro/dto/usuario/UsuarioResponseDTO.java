@@ -10,7 +10,7 @@ public class UsuarioResponseDTO {
     private String nombre;
     private String username;
     private String rol;
-    private boolean activo; // <--- 1. Agregamos el campo
+    private boolean activo;
 
     public static UsuarioResponseDTO from(Usuario usuario) {
         UsuarioResponseDTO dto = new UsuarioResponseDTO();

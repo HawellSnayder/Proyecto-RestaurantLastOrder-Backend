@@ -26,9 +26,8 @@ public class MesaServiceImpl implements MesaService {
 
     @Override
     @Transactional
-    public Mesa crear(MesaRequestDTO dto) { // <--- Cambiamos parámetros por el DTO
+    public Mesa crear(MesaRequestDTO dto) {
 
-        // Ahora usamos dto.getNumero()
         if (mesaRepository.existsByNumero(dto.getNumero())) {
             throw new IllegalArgumentException("La mesa número " + dto.getNumero() + " ya existe");
         }
@@ -86,10 +85,6 @@ public class MesaServiceImpl implements MesaService {
         enviarEvento(mesa, EventoMesa.ACTUALIZADA);
     }
 
-    // =========================
-    // CONSULTAS
-    // =========================
-
     @Override
     public List<Mesa> listarLibres() {
         return mesaRepository.findByEstado(EstadoMesa.LIBRE);
@@ -109,11 +104,7 @@ public class MesaServiceImpl implements MesaService {
         if (mesa.getEstado() != EstadoMesa.LIBRE) {
             throw new RuntimeException("No se puede eliminar una mesa que está " + mesa.getEstado());
         }
-
-        // Guardamos los datos antes de borrar para el último evento
         mesaRepository.delete(mesa);
-
-        // UNIFICADO: Enviamos el evento con el tipo ELIMINADA
         enviarEvento(mesa, EventoMesa.ELIMINADA);
     }
 
@@ -132,16 +123,11 @@ public class MesaServiceImpl implements MesaService {
 
         mesa.setCapacidad(dto.getCapacidad());
         Mesa mesaActualizada = mesaRepository.save(mesa);
-
-        // UNIFICADO: Usamos tu método enviarEvento
         enviarEvento(mesaActualizada, EventoMesa.ACTUALIZADA);
 
         return mesaActualizada;
     }
 
-    // =========================
-    // SOCKET
-    // =========================
 
     private void enviarEvento(Mesa mesa, EventoMesa evento) {
 

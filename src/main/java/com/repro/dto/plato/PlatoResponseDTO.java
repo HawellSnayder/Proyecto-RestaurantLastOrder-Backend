@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
 
-@Data // 🔥 Esto genera Getters, Setters, toString, etc.
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlatoResponseDTO {

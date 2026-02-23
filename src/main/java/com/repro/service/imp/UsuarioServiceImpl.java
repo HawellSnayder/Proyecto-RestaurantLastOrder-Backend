@@ -53,20 +53,11 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     @Transactional
     public void desactivar(Long id) {
-        // 1. Buscamos al usuario específico por su ID único
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        // 2. CAMBIO: Solo modificamos el estado de ESTE usuario
         usuario.setActivo(false);
-
-        // 3. Guardamos solo a este usuario
         usuarioRepository.save(usuario);
-
-        // 4. Socket: Enviamos el ID específico para que el front sepa a quién afectar
         messagingTemplate.convertAndSend("/topic/usuarios-desactivados", id);
-
-        // 5. Logout forzado solo para este username
         messagingTemplate.convertAndSend("/topic/logout/" + usuario.getUsername(),
                 "Tu cuenta ha sido desactivada por el administrador.");
     }
@@ -86,15 +77,13 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new IllegalStateException("Usuario no encontrado"));
     }
     @Override
-    @Transactional // Importante para que el cambio se guarde en la BD
+    @Transactional
     public void activar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         usuario.setActivo(true);
-        usuarioRepository.save(usuario); // Persistimos el cambio
-
-        // Opcional: Notificar por socket si otros admins están viendo la lista
+        usuarioRepository.save(usuario);
         messagingTemplate.convertAndSend("/topic/usuarios-desactivados", id);
     }
     @Override
@@ -109,16 +98,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     public void eliminar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        // 1. Notificar por Socket antes de borrar para que el frontend pueda identificar al usuario
-        // Usamos el mismo canal de logout que configuraste en el WebsocketService
         messagingTemplate.convertAndSend("/topic/logout/" + usuario.getUsername(),
                 "Tu cuenta ha sido eliminada por un administrador.");
 
-        // 2. Notificar a otros administradores para que quiten la fila de su tabla
         messagingTemplate.convertAndSend("/topic/usuarios-desactivados", id);
-
-        // 3. Borrar físicamente de la BD
         usuarioRepository.delete(usuario);
     }
 }

@@ -22,7 +22,7 @@ public class PlatoController {
 
     @GetMapping
     public ResponseEntity<List<PlatoResponseDTO>> listarTodos() {
-        return ResponseEntity.ok(platoService.listarTodos()); // Crea este método en el Service
+        return ResponseEntity.ok(platoService.listarTodos());
     }
     @GetMapping("/disponibles")
     public ResponseEntity<List<PlatoResponseDTO>> listarDisponibles() {
@@ -35,7 +35,7 @@ public class PlatoController {
             @RequestParam("nombre") String nombre,
             @RequestParam("precio") BigDecimal precio,
             @RequestParam("categoriaId") Long categoriaId,
-            @RequestParam("imagen") MultipartFile imagen // <--- Aquí llega el archivo
+            @RequestParam("imagen") MultipartFile imagen
     ) throws IOException {
         PlatoRequestDTO dto = new PlatoRequestDTO();
         dto.setNombre(nombre);

@@ -41,7 +41,7 @@ public class PlatoServiceImpl implements PlatoService {
     public List<PlatoResponseDTO> listarTodos() {
         return repository.findAll()
                 .stream()
-                .map(PlatoResponseDTO::from) // Usamos el método que ya definiste
+                .map(PlatoResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
@@ -117,18 +117,15 @@ public class PlatoServiceImpl implements PlatoService {
     @Override
     @Transactional
     public PlatoResponseDTO crearConImagen(PlatoRequestDTO dto, MultipartFile archivo) {
-        // 1. Validar categoría
         CategoriaPlato categoria = categoriaPlatoRepository.findById(dto.getCategoriaId())
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
 
-        // 2. Crear entidad
         Plato plato = new Plato();
         plato.setNombre(dto.getNombre());
         plato.setPrecio(dto.getPrecio());
         plato.setCategoria(categoria);
         plato.setDisponible(true);
 
-        // 3. Convertir imagen a bytes para la BD (BLOB)
         if (archivo != null && !archivo.isEmpty()) {
             try {
                 plato.setImagen(archivo.getBytes());
@@ -149,8 +146,6 @@ public class PlatoServiceImpl implements PlatoService {
                 .orElseThrow(() -> new RuntimeException("Plato no encontrado"));
 
         repository.delete(plato);
-
-        // Notificamos a los WebSockets que un plato fue ELIMINADO
         enviarEvento(plato, EventoPlato.ELIMINADO);
     }
 

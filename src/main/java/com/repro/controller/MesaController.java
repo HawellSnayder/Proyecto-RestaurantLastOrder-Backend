@@ -18,9 +18,6 @@ public class MesaController {
 
     private final MesaService mesaService;
 
-    // =========================
-    // CREAR
-    // =========================
     @PostMapping
     public ResponseEntity<MesaResponseDTO> crear(
             @RequestBody MesaRequestDTO dto
@@ -30,9 +27,6 @@ public class MesaController {
         return ResponseEntity.ok(convertToResponse(mesa));
     }
 
-    // =========================
-    // LISTAR LIBRES
-    // =========================
     @GetMapping("/libres")
     public ResponseEntity<List<MesaResponseDTO>> listarLibres() {
 
@@ -44,9 +38,6 @@ public class MesaController {
         return ResponseEntity.ok(mesas);
     }
 
-    // =========================
-    // LISTAR TODAS
-    // =========================
     @GetMapping
     public ResponseEntity<List<MesaResponseDTO>> listarTodas() {
 
@@ -58,27 +49,18 @@ public class MesaController {
         return ResponseEntity.ok(mesas);
     }
 
-    // =========================
-    // RESERVAR
-    // =========================
     @PatchMapping("/{id}/reservar")
     public ResponseEntity<Void> reservar(@PathVariable Long id) {
         mesaService.reservar(id);
         return ResponseEntity.noContent().build();
     }
 
-    // =========================
-    // OCUPAR (solo si decides exponerlo)
-    // =========================
     @PatchMapping("/{id}/ocupar")
     public ResponseEntity<Void> ocupar(@PathVariable Long id) {
         mesaService.ocupar(id);
         return ResponseEntity.noContent().build();
     }
 
-    // =========================
-    // LIBERAR (solo si decides exponerlo)
-    // =========================
     @PatchMapping("/{id}/liberar")
     public ResponseEntity<Void> liberar(@PathVariable Long id) {
         mesaService.liberar(id);

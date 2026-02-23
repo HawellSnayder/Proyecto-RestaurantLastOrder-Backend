@@ -59,12 +59,11 @@ public class PedidoController {
     }
     @GetMapping
     public ResponseEntity<List<PedidoResponseDTO>> listar(
-            @RequestParam(required = false) String estado // Lo hacemos opcional
+            @RequestParam(required = false) String estado
     ) {
         if (estado != null && !estado.isEmpty()) {
             return ResponseEntity.ok(pedidoService.listarPorEstado(estado));
         }
-        // Necesitas tener este método en tu PedidoService para traer TODOS
         return ResponseEntity.ok(pedidoService.listarTodos());
     }
 }

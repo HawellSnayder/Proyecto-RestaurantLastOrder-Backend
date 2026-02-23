@@ -12,7 +12,7 @@ import java.util.function.Function;
 public class JwtService {
 
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private final long EXPIRATION = 1000 * 60 * 60; // 1 hora
+    private final long EXPIRATION = 1000 * 60 * 60;
 
     public String generateToken(String username, String rol) {
         return Jwts.builder()
@@ -24,18 +24,15 @@ public class JwtService {
                 .compact();
     }
 
-    // 1️⃣ Extraer el username del token
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // 2️⃣ Validar si el token pertenece al usuario y no ha expirado
     public boolean isTokenValid(String token, String username) {
         final String extractedUsername = extractUsername(token);
         return (extractedUsername.equals(username)) && !isTokenExpired(token);
     }
 
-    // --- Métodos auxiliares privados ---
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());

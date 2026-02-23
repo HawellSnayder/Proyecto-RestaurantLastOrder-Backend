@@ -35,14 +35,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Usamos la configuración por defecto (busca @CrossOrigin o WebMvcConfigurer)
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/ws-repro/**").permitAll()
-
-                        // Permisos abiertos para pruebas de creación de pedidos
                         .requestMatchers("/api/pedidos/**").permitAll()
                         .requestMatchers("/api/platos/**").permitAll()
                         .requestMatchers("/api/mesas/**").permitAll()

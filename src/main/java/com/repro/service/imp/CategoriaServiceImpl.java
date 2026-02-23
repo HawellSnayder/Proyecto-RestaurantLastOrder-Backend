@@ -74,8 +74,6 @@ public class CategoriaServiceImpl implements CategoriaService {
         categoria.setActivo(false);
 
         enviarEventoCategoria(categoria, EventoCategoria.DESACTIVADA);
-
-        // También notificar platos de esa categoría
         messagingTemplate.convertAndSend("/topic/categorias/desactivada", categoria.getId());
     }
     @Transactional
@@ -93,17 +91,13 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Override
     @Transactional
     public void eliminar(Long id) {
-        // 1. Verificamos si existe antes de borrar
         CategoriaPlato categoria = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + id));
 
         try {
-            // 2. Eliminamos y forzamos el volcado a la DB (flush)
-            // para detectar si hay platos asociados ANTES de enviar el socket
             repository.delete(categoria);
             repository.flush();
 
-            // 3. Si el flush fue exitoso, notificamos por WebSockets
             CategoriaSocketDTO dto = new CategoriaSocketDTO();
             dto.setId(id);
             dto.setNombre(categoria.getNombre());
@@ -115,7 +109,6 @@ public class CategoriaServiceImpl implements CategoriaService {
             System.out.println("🗑️ Categoría eliminada y notificación enviada: " + id);
 
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            // Este error ocurre si la categoría está siendo usada por la tabla de Platos
             throw new RuntimeException("No se puede eliminar: La categoría tiene platos asociados. " +
                     "Desactívala en su lugar para ocultarla del menú.");
         }

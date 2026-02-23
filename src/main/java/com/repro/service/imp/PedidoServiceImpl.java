@@ -31,9 +31,6 @@ public class PedidoServiceImpl implements PedidoService {
     private final UsuarioService usuarioService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    // =========================
-    // CREAR PEDIDO
-    // =========================
 
     @Override
     public PedidoResponseDTO crearPedido(PedidoRequestDTO dto) {
@@ -62,41 +59,30 @@ public class PedidoServiceImpl implements PedidoService {
         return PedidoResponseDTO.from(guardado);
     }
 
-    // =========================
-    // EDITAR PEDIDO
-    // =========================
 
     @Override
     public PedidoResponseDTO editarPedido(Long pedidoId, PedidoRequestDTO dto) {
         Pedido pedido = obtenerPedido(pedidoId);
         validarPedidoEditable(pedido);
-
-        // 1. Identificar IDs que vienen del Front
         List<Long> idsNuevos = dto.getDetalles().stream()
                 .map(DetallePedidoRequestDTO::getPlatoId)
                 .toList();
-
-        // 2. Eliminar los que ya no están (Orphan Removal hará el resto)
         pedido.getDetalles().removeIf(det -> !idsNuevos.contains(det.getPlato().getId()));
 
         BigDecimal totalAcumulado = BigDecimal.ZERO;
 
-        // 3. Procesar
         for (DetallePedidoRequestDTO detDto : dto.getDetalles()) {
-            // Buscar si ya existe en la lista actual del pedido
             DetallePedido detalle = pedido.getDetalles().stream()
                     .filter(d -> d.getPlato().getId().equals(detDto.getPlatoId()))
                     .findFirst()
                     .orElse(null);
 
             if (detalle != null) {
-                // Actualizar existente
                 detalle.setCantidad(detDto.getCantidad());
                 BigDecimal subtotal = detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detDto.getCantidad()));
                 detalle.setSubtotal(subtotal);
                 totalAcumulado = totalAcumulado.add(subtotal);
             } else {
-                // Es nuevo: agregarDetalle ya lo añade a pedido.getDetalles() y calcula subtotal
                 totalAcumulado = totalAcumulado.add(agregarDetalle(pedido, detDto));
             }
         }
@@ -110,9 +96,6 @@ public class PedidoServiceImpl implements PedidoService {
         return PedidoResponseDTO.from(guardado);
     }
 
-    // =========================
-    // CAMBIAR ESTADO CON VALIDACIÓN DE FLUJO
-    // =========================
 
     @Override
     public PedidoResponseDTO cambiarEstado(Long pedidoId, String nuevoEstado) {
@@ -130,7 +113,6 @@ public class PedidoServiceImpl implements PedidoService {
 
         EstadoPedido estado = estadoPedidoService.obtenerPorNombre(nuevoEstado);
 
-        // CANCELAR
         if (nuevoEstado.equalsIgnoreCase("CANCELADO")) {
 
             pedido.setEstado(estado);
@@ -141,21 +123,14 @@ public class PedidoServiceImpl implements PedidoService {
             return PedidoResponseDTO.from(pedido);
         }
 
-        // PAGAR
         if (nuevoEstado.equalsIgnoreCase("PAGADO")) {
-            // 1. Asignamos el estado PAGADO que ya obtuviste arriba
             pedido.setEstado(estado);
-
-            // 2. Liberamos la mesa
             pedido.getMesa().setEstado(EstadoMesa.LIBRE);
-
-            // 3. Enviamos el evento por socket (Cambié el evento a ESTADO_CAMBIADO o puedes usar uno de pago)
             enviarEventoSocket(pedido, EventoPedido.ESTADO_CAMBIADO);
 
             return PedidoResponseDTO.from(pedido);
         }
 
-        // Cambio normal
         pedido.setEstado(estado);
 
         enviarEventoSocket(pedido, EventoPedido.ESTADO_CAMBIADO);
@@ -163,9 +138,6 @@ public class PedidoServiceImpl implements PedidoService {
         return PedidoResponseDTO.from(pedido);
     }
 
-    // =========================
-    // CONSULTAS
-    // =========================
 
     @Override
     @Transactional(readOnly = true)
@@ -184,15 +156,12 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> listarTodos() {
-        return pedidoRepository.findAll() // O tu lógica para obtener todos
+        return pedidoRepository.findAll()
                 .stream()
                 .map(PedidoResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
-    // =========================
-    // VALIDACIÓN DE FLUJO
-    // =========================
 
     private void validarTransicion(String actual, String nuevo) {
 
@@ -217,9 +186,6 @@ public class PedidoServiceImpl implements PedidoService {
         }
     }
 
-    // =========================
-    // MÉTODOS PRIVADOS
-    // =========================
 
     private Pedido obtenerPedido(Long id) {
         return pedidoRepository.findById(id)

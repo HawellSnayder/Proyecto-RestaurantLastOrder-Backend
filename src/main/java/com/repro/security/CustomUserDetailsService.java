@@ -24,7 +24,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(usuario.getUsername())
                 .password(usuario.getPassword())
-                // Usamos .authorities() para que coincida exactamente con "ADMIN" de la BD
                 .authorities(new SimpleGrantedAuthority(usuario.getRol().getNombre()))
                 .build();
     }
